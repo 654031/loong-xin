@@ -1,0 +1,94 @@
+/*
+ * LOONGARCH32 LS1C102 link script. @ 2023.6.20
+ *
+ * Copyright (C) 2021-2023 Suzhou Tiancheng Software Inc. All Rights Reserved.
+ */
+
+OUTPUT_FORMAT("elf32-loongarch", "elf32-loongarch", "elf32-loongarch")
+
+OUTPUT_ARCH("loongarch")
+
+MEMORY
+{
+    ROM  (rx) : ORIGIN = 0x1c000000, LENGTH = 128K
+    IRAM (rw) : ORIGIN = 0x80000000, LENGTH = 4K
+    DRAM (rw) : ORIGIN = 0x80001000, LENGTH = 4K
+}
+
+__DRamBase = DEFINED(__DRamBase) ? __DRamBase : 0x80001000;
+__DRamSize = DEFINED(__DRamSize) ? __DRamSize : 4K;
+
+ENTRY(start)
+
+SECTIONS
+{
+    . = 0x1C000000;
+    . = ALIGN(4);
+    .text :
+    {
+        *(.text)
+        . = ALIGN(4);
+        *(.rel.text)
+        . = ALIGN(4);
+        *(.reginfo)
+        . = ALIGN(4);
+        *(.ptr)
+        . = ALIGN(4);
+        *(.shstrtab)
+        . = ALIGN(4);
+        *(.strtab)
+        . = ALIGN(4);
+        *(.got)
+        . = ALIGN(4);
+        *(.eh_frame)
+    } >ROM
+
+    . = ALIGN(4);
+    __rdata_start = .;          /* readonly DATA */
+    .rodata :
+    {
+        . = ALIGN(4);
+        *(.rodata)
+        *(.rodata.*)
+        . = ALIGN(4);
+        __rdata_end = .;        /* rodata end */
+    } >ROM
+
+    . = ALIGN(4);
+    __data_start = .;           /* initialized DATA */
+    .data : AT(ADDR(.rodata) + SIZEOF(.rodata))
+    {
+        *(.data)
+    } > DRAM
+
+    _gp = ABSOLUTE(.);          /* TODO ? */
+    __data_end = .;
+
+    . = ALIGN(4);
+    __bss_start = .;            /* BSS start */
+    .sbss :
+    {
+        *(.sbss)
+    } > DRAM
+
+    . = ALIGN(4);
+    .bss :
+    {
+        *(.bss)
+    } > DRAM
+
+    . = ALIGN(4);
+    .scommon :
+    {
+        *(.scommon)
+    } > DRAM
+    
+    . = ALIGN(4);
+    __bss_end = .;              /* BSS ending */
+    
+}
+
+/*
+ * @@ END
+ */
+ 
